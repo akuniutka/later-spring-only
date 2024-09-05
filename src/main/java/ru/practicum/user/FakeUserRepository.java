@@ -17,20 +17,20 @@ public class FakeUserRepository implements UserRepository {
     }
 
     @Override
-    public User save(User user) {
+    public User save(final User user) {
         throw new UnsupportedOperationException("save() method not ready yet");
     }
 
-    private static List<User> createManyFakeUsers(int count) {
-        List<User> fakeUsers = new ArrayList<>();
+    private static List<User> createManyFakeUsers(final int count) {
+        final List<User> fakeUsers = new ArrayList<>();
         for (long id = 1; id <= count; id++) {
             fakeUsers.add(createFakeUser(id));
         }
         return Collections.unmodifiableList(fakeUsers);
     }
 
-    private static User createFakeUser(long id) {
-        User fakeUser = new User();
+    private static User createFakeUser(final long id) {
+        final User fakeUser = new User();
         fakeUser.setId(id);
         fakeUser.setEmail("mail" + id + "@example.com");
         fakeUser.setName("Akakiy Akakievich #" + id);

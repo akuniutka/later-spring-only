@@ -12,17 +12,17 @@ public class LaterApplication {
     private static final int PORT = 8080;
 
     public static void main(String[] args) throws LifecycleException {
-        Tomcat tomcat = new Tomcat();
+        final Tomcat tomcat = new Tomcat();
         tomcat.getConnector().setPort(PORT);
-        Context tomcatContext = tomcat.addContext("", null);
+        final Context tomcatContext = tomcat.addContext("", null);
 
-        AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
+        final AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
         applicationContext.scan("ru.practicum");
         applicationContext.setServletContext(tomcatContext.getServletContext());
         applicationContext.refresh();
 
-        DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
-        Wrapper dispatcherWrapper = Tomcat.addServlet(tomcatContext, "dispatcher", dispatcherServlet);
+        final DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
+        final Wrapper dispatcherWrapper = Tomcat.addServlet(tomcatContext, "dispatcher", dispatcherServlet);
         dispatcherWrapper.addMapping("/");
         dispatcherWrapper.setLoadOnStartup(1);
 

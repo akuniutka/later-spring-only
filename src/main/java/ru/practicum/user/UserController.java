@@ -21,15 +21,15 @@ public class UserController {
     @GetMapping
     public List<User> getAllUsers() {
         log.info("Received GET at /users");
-        List<User> users = userService.getAllUsers();
+        final List<User> users = userService.getAllUsers();
         log.info("Responded to GTE /users");
         return users;
     }
 
     @PostMapping
-    public User saveNewUser(@RequestBody User user) {
+    public User saveNewUser(@RequestBody final User user) {
         log.info("Received POST at /users: {}", user);
-        User savedUser = userService.saveUser(user);
+        final User savedUser = userService.saveUser(user);
         log.info("Responded to POST /users: {}", savedUser);
         return savedUser;
     }
