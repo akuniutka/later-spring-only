@@ -1,6 +1,7 @@
 package ru.practicum.user;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,17 +13,24 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
+@Slf4j
 public class UserController {
 
     private final UserService userService;
 
     @GetMapping
     public List<User> getAllUsers() {
-        return userService.getAllUsers();
+        log.info("Received GET at /users");
+        List<User> users = userService.getAllUsers();
+        log.info("Responded to GTE /users");
+        return users;
     }
 
     @PostMapping
     public User saveNewUser(@RequestBody User user) {
-        return userService.saveUser(user);
+        log.info("Received POST at /users: {}", user);
+        User savedUser = userService.saveUser(user);
+        log.info("Responded to POST /users: {}", savedUser);
+        return savedUser;
     }
 }
