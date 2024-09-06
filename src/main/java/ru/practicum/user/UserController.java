@@ -22,7 +22,7 @@ public class UserController {
     public List<User> getAllUsers() {
         log.info("Received GET at /users");
         final List<User> users = userService.getAllUsers();
-        log.info("Responded to GTE /users");
+        log.info("Responded to GTE /users: {}", users);
         return users;
     }
 
