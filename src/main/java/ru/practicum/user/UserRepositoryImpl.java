@@ -15,7 +15,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     UserRepositoryImpl() {
         this.users = new HashMap<>();
-        this.lastUsedId = 0;
+        this.lastUsedId = 0L;
     }
 
     @Override

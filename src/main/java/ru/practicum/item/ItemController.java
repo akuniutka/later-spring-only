@@ -40,8 +40,8 @@ public class ItemController {
 
     @DeleteMapping("/{itemId}")
     public void deleteItem(@RequestHeader("X-Later-User-Id") final long userId,
-            @PathVariable(name = "itemId") final long itemId) {
-        log.info("Received DELETE at /items/{}", itemId);
+            @PathVariable final long itemId) {
+        log.info("Received DELETE at /items/{} (X-Later-User-Id: {})", itemId, userId);
         itemService.deleteItem(userId, itemId);
         log.info("Responded to DELETE /items/{} with no body", itemId);
     }
