@@ -17,20 +17,22 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserMapper mapper;
 
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         log.info("Received GET at /users");
-        final List<User> users = userService.getAllUsers();
-        log.info("Responded to GTE /users: {}", users);
-        return users;
+        final List<UserDto> dtos = mapper.mapToDto(userService.getAllUsers());
+        log.info("Responded to GTE /users: {}", dtos);
+        return dtos;
     }
 
     @PostMapping
-    public User saveNewUser(@RequestBody final User user) {
-        log.info("Received POST at /users: {}", user);
-        final User savedUser = userService.saveUser(user);
-        log.info("Responded to POST /users: {}", savedUser);
-        return savedUser;
+    public UserDto saveNewUser(@RequestBody final NewUserDto newUserDto) {
+        log.info("Received POST at /users: {}", newUserDto);
+        final User user = mapper.mapToUser(newUserDto);
+        final UserDto dto = mapper.mapToDto(userService.saveUser(user));
+        log.info("Responded to POST /users: {}", dto);
+        return dto;
     }
 }

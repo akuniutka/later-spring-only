@@ -20,22 +20,24 @@ import java.util.List;
 public class ItemController {
 
     private final ItemService itemService;
+    private final ItemMapper mapper;
 
     @GetMapping
-    public List<Item> get(@RequestHeader("X-Later-User-Id") final long userId) {
+    public List<ItemDto> get(@RequestHeader("X-Later-User-Id") final long userId) {
         log.info("Received GET at /items (X-Later-User-Id: {})", userId);
-        final List<Item> items = itemService.getItems(userId);
-        log.info("Responded to GET /items: {}", items);
-        return items;
+        final List<ItemDto> dtos = mapper.mapToDto(itemService.getItems(userId));
+        log.info("Responded to GET /items: {}", dtos);
+        return dtos;
     }
 
     @PostMapping
-    public Item add(@RequestHeader("X-Later-User-Id") final long userId,
-            @RequestBody final Item item) {
-        log.info("Received POST at /items: {} (X-Later-User-Id: {})", item, userId);
-        final Item savedItem = itemService.addNewItem(userId, item);
-        log.info("Responded to POST /items: {}", savedItem);
-        return savedItem;
+    public ItemDto add(@RequestHeader("X-Later-User-Id") final long userId,
+            @RequestBody final NewItemDto newItemDto) {
+        log.info("Received POST at /items: {} (X-Later-User-Id: {})", newItemDto, userId);
+        final Item item = mapper.mapToItem(newItemDto);
+        final ItemDto dto = mapper.mapToDto(itemService.addNewItem(userId, item));
+        log.info("Responded to POST /items: {}", dto);
+        return dto;
     }
 
     @DeleteMapping("/{itemId}")
