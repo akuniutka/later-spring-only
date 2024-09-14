@@ -15,7 +15,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> getItems(final long userId) {
-        return repository.finaByUserId(userId);
+        return repository.findByUserId(userId);
     }
 
     @Override
@@ -25,7 +25,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public void deleteItem(final long userId, final long itemId) {
-        repository.deleteByUserIdAndItemId(userId, itemId);
+    public void deleteItem(final long userId, final long id) {
+        repository.deleteByUserIdAndId(userId, id);
     }
 }
