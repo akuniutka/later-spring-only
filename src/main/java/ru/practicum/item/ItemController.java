@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,10 +25,13 @@ public class ItemController {
     private final ItemMapper mapper;
 
     @GetMapping
-    public List<ItemDto> get(@RequestHeader("X-Later-User-Id") final long userId) {
-        log.info("Received GET at /items (X-Later-User-Id: {})", userId);
-        final List<ItemDto> dtos = mapper.mapToDto(itemService.getItems(userId));
-        log.info("Responded to GET /items: {}", dtos);
+    public List<ItemDto> get(
+            @RequestHeader("X-Later-User-Id") final long userId,
+            @RequestParam(required = false) final Set<String> tags
+    ) {
+        log.info("Received GET at /items?tags={} (X-Later-User-Id: {})", tags, userId);
+        final List<ItemDto> dtos = mapper.mapToDto(itemService.getItems(userId, tags));
+        log.info("Responded to GET /items?tags={}: {}", tags, dtos);
         return dtos;
     }
 
