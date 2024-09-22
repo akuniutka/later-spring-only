@@ -16,6 +16,13 @@ class UserServiceImpl implements UserService {
     private final UserRepository repository;
 
     @Override
+    @Transactional
+    public User saveUser(final User user) {
+        user.setState(UserState.ACTIVE);
+        return repository.save(user);
+    }
+
+    @Override
     public User getUser(final long id) {
         return repository.findById(id).orElseThrow();
     }
@@ -23,12 +30,5 @@ class UserServiceImpl implements UserService {
     @Override
     public List<User> getAllUsers() {
         return repository.findAll();
-    }
-
-    @Override
-    @Transactional
-    public User saveUser(final User user) {
-        user.setState(UserState.ACTIVE);
-        return repository.save(user);
     }
 }

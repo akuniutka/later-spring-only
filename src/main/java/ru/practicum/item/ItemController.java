@@ -43,7 +43,6 @@ public class ItemController extends BaseController {
     }
 
     @GetMapping
-    @Transactional(readOnly = true)
     public List<ItemDto> get(
             @RequestHeader("X-Later-User-Id") final long userId,
             @RequestParam(name = "tags", required = false) final Set<String> tags,
