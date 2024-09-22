@@ -3,8 +3,8 @@ services:
     image: postgres:16.1
     ports:
       - "5433:5432"
-    volumes:
-      - ./volumes/postgres:/var/lib/postgresql/data
+#    volumes:
+#      - ./volumes/postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=later
       - POSTGRES_USER=${LATER_USER}
@@ -14,3 +14,46 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
+
+  db-init:
+    image: postgres:16.1
+    container_name: db-init
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - POSTGRES_USER=${LATER_USER}
+      - POSTGRES_PASSWORD=${LATER_PASSWORD}
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e 
+        psql postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@db:5432/later -v ON_ERROR_STOP=1 <<-EOSQL
+          CREATE TABLE IF NOT EXISTS users (
+            id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            first_name VARCHAR(40) NOT NULL,
+            last_name VARCHAR(40) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            state VARCHAR(40) NOT NULL,
+            registration_date TIMESTAMP WITH TIME ZONE NOT NULL
+          );
+        
+          CREATE TABLE IF NOT EXISTS items (
+            id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            user_id BIGINT NOT NULL REFERENCES users (id),
+            url VARCHAR(255) NOT NULL
+          );
+        
+          CREATE TABLE IF NOT EXISTS tags (
+            item_id BIGINT NOT NULL REFERENCES items (id),
+            name VARCHAR(40) NOT NULL
+          );
+        
+          CREATE TABLE IF NOT EXISTS item_notes (
+            id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+            item_id BIGINT NOT NULL REFERENCES items (id),
+            text VARCHAR(2000),
+            created TIMESTAMP WITH TIME ZONE NOT NULL
+          );
+        EOSQL

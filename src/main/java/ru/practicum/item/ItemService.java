@@ -5,9 +5,11 @@ import java.util.Set;
 
 public interface ItemService {
 
-    List<Item> getItems(long userId, Set<String> tags);
-
     Item addNewItem(long userId, Item item);
 
-    void deleteItem(long userId, long itemId);
+    Item getItem(long userId, long id);
+
+    List<Item> getItems(long userId, Set<String> tags);
+
+    void deleteItem(long userId, long id);
 }

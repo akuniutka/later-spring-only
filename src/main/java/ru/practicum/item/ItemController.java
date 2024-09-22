@@ -2,6 +2,7 @@ package ru.practicum.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,26 +19,19 @@ import java.util.Set;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/items")
+@Transactional(readOnly = true)
 @Slf4j
 public class ItemController {
 
     private final ItemService itemService;
     private final ItemMapper mapper;
 
-    @GetMapping
-    public List<ItemDto> get(
-            @RequestHeader("X-Later-User-Id") final long userId,
-            @RequestParam(required = false) final Set<String> tags
-    ) {
-        log.info("Received GET at /items?tags={} (X-Later-User-Id: {})", tags, userId);
-        final List<ItemDto> dtos = mapper.mapToDto(itemService.getItems(userId, tags));
-        log.info("Responded to GET /items?tags={}: {}", tags, dtos);
-        return dtos;
-    }
-
     @PostMapping
-    public ItemDto add(@RequestHeader("X-Later-User-Id") final long userId,
-            @RequestBody final NewItemDto newItemDto) {
+    @Transactional
+    public ItemDto add(
+            @RequestHeader("X-Later-User-Id") final long userId,
+            @RequestBody final NewItemDto newItemDto
+    ) {
         log.info("Received POST at /items: {} (X-Later-User-Id: {})", newItemDto, userId);
         final Item item = mapper.mapToItem(newItemDto);
         final ItemDto dto = mapper.mapToDto(itemService.addNewItem(userId, item));
@@ -45,9 +39,24 @@ public class ItemController {
         return dto;
     }
 
+    @GetMapping
+    @Transactional(readOnly = true)
+    public List<ItemDto> get(
+            @RequestHeader("X-Later-User-Id") final long userId,
+            @RequestParam(name = "tags", required = false) final Set<String> tags
+    ) {
+        log.info("Received GET at /items?tags={} (X-Later-User-Id: {})", tags, userId);
+        final List<ItemDto> dtos = mapper.mapToDto(itemService.getItems(userId, tags));
+        log.info("Responded to GET /items?tags={}: {}", tags, dtos);
+        return dtos;
+    }
+
     @DeleteMapping("/{itemId}")
-    public void deleteItem(@RequestHeader("X-Later-User-Id") final long userId,
-            @PathVariable final long itemId) {
+    @Transactional
+    public void deleteItem(
+            @RequestHeader("X-Later-User-Id") final long userId,
+            @PathVariable(name = "itemId") final long itemId
+    ) {
         log.info("Received DELETE at /items/{} (X-Later-User-Id: {})", itemId, userId);
         itemService.deleteItem(userId, itemId);
         log.info("Responded to DELETE /items/{} with no body", itemId);

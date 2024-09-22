@@ -1,0 +1,327 @@
+### Create user #1
+
+< {%
+    client.global.set("user_1_id", 1);
+    client.global.set("user_1_first_name", $random.alphabetic(10));
+    client.global.set("user_1_last_name", $random.alphabetic(20));
+    client.global.set("user_1_email", $random.email);
+%}
+
+POST {{host}}/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "{{user_1_first_name}}",
+  "lastName": "{{user_1_last_name}}",
+  "email": "{{user_1_email}}"
+}
+
+> {%
+    client.global.set("user_1_registration_date", response.body.registrationDate);
+%}
+
+### Create user #2
+
+< {%
+    client.global.set("user_2_id", 2);
+    client.global.set("user_2_first_name", $random.alphabetic(10));
+    client.global.set("user_2_last_name", $random.alphabetic(20));
+    client.global.set("user_2_email", $random.email);
+%}
+
+POST {{host}}/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "{{user_2_first_name}}",
+  "lastName": "{{user_2_last_name}}",
+  "email": "{{user_2_email}}"
+}
+
+> {%
+    client.global.set("user_2_registration_date", response.body.registrationDate);
+%}
+
+### Create item #1
+
+< {%
+    client.global.set("item_1_id", 1);
+    client.global.set("item_1_user_id", client.global.get("user_1_id"));
+    client.global.set("item_1_url", $random.alphabetic(40));
+    client.global.set("item_1_tag_1", $random.alphabetic(10));
+    client.global.set("item_1_tag_2", $random.alphabetic(10));
+    client.global.set("item_1_tag_3", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_1_user_id}}
+
+{
+  "url": "{{item_1_url}}",
+  "tags": ["{{item_1_tag_1}}", "{{item_1_tag_2}}", "{{item_1_tag_3}}"]
+}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("Item #1 id is correct", function() {
+        client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body.id === client.global.get("item_1_id"), "Wrong item id")
+    })
+
+    client.test("Item #1 url is correct", function() {
+        client.assert(response.body.hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body.url === client.global.get("item_1_url"), "Wrong item url")
+    })
+
+    client.test("Item #1 tags are correct", function() {
+        client.assert(response.body.hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body.tags.length === 3, "Wrong number of tags")
+        client.assert(response.body.tags.indexOf(client.global.get("item_1_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_1") + "'")
+        client.assert(response.body.tags.indexOf(client.global.get("item_1_tag_2")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_2") + "'")
+        client.assert(response.body.tags.indexOf(client.global.get("item_1_tag_3")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_3") + "'")
+    })
+%}
+
+### Create item #2
+
+< {%
+    client.global.set("item_2_id", 2);
+    client.global.set("item_2_user_id", client.global.get("user_1_id"));
+    client.global.set("item_2_url", $random.alphabetic(40));
+    client.global.set("item_2_tag_1", $random.alphabetic(10));
+    client.global.set("item_2_tag_2", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_2_user_id}}
+
+{
+  "url": "{{item_2_url}}",
+  "tags": ["{{item_2_tag_1}}", "{{item_2_tag_2}}"]
+}
+
+### Create item #3
+
+< {%
+    client.global.set("item_3_id", 3);
+    client.global.set("item_3_user_id", client.global.get("user_1_id"));
+    client.global.set("item_3_url", $random.alphabetic(40));
+    client.global.set("item_3_tag_1", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_3_user_id}}
+
+{
+  "url": "{{item_3_url}}",
+  "tags": ["{{item_3_tag_1}}"]
+}
+
+### Create item #4
+
+< {%
+    client.global.set("item_4_id", 3);
+    client.global.set("item_4_user_id", client.global.get("user_2_id"));
+    client.global.set("item_4_url", $random.alphabetic(40));
+    client.global.set("item_4_tag_1", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_4_user_id}}
+
+{
+  "url": "{{item_4_url}}",
+  "tags": ["{{item_4_tag_1}}"]
+}
+
+### Get items of user #1
+
+GET {{host}}/items
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 3 items in the list", function() {
+        client.assert(response.body.length === 3, "Wrong number of items")
+    })
+
+    client.test("Item #1 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("item_1_id"), "Wrong item id")
+    })
+
+    client.test("Item #1 url is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[0].url === client.global.get("item_1_url"), "Wrong item url")
+    })
+
+    client.test("Item #1 tags are correct", function() {
+        client.assert(response.body[0].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[0].tags.length === 3, "Wrong number of tags")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_1") + "'")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_2")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_2") + "'")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_3")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_3") + "'")
+    })
+
+    client.test("Item #2 id is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[1].id === client.global.get("item_2_id"), "Wrong item id")
+    })
+
+    client.test("Item #2 url is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[1].url === client.global.get("item_2_url"), "Wrong item url")
+    })
+
+    client.test("Item #2 tags are correct", function() {
+        client.assert(response.body[1].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[1].tags.length === 2, "Wrong number of tags")
+        client.assert(response.body[1].tags.indexOf(client.global.get("item_2_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_2_tag_1") + "'")
+        client.assert(response.body[1].tags.indexOf(client.global.get("item_2_tag_2")) != -1, "Cannot find tag '" + client.global.get("item_2_tag_2") + "'")
+    })
+
+    client.test("Item #3 id is correct", function() {
+        client.assert(response.body[2].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[2].id === client.global.get("item_3_id"), "Wrong item id")
+    })
+
+    client.test("Item #3 url is correct", function() {
+        client.assert(response.body[2].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[2].url === client.global.get("item_3_url"), "Wrong item url")
+    })
+
+    client.test("Item #3 tags are correct", function() {
+        client.assert(response.body[2].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[2].tags.length === 1, "Wrong number of tags")
+        client.assert(response.body[2].tags.indexOf(client.global.get("item_3_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_3_tag_1") + "'")
+    })
+%}
+
+### Get items of user #1 by tags
+
+GET {{host}}/items?tags={{item_1_tag_1}},{{item_3_tag_1}}
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 2 items in the list", function() {
+        client.assert(response.body.length === 2, "Wrong number of items")
+    })
+
+    client.test("Item #1 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("item_1_id"), "Wrong item id")
+    })
+
+    client.test("Item #1 url is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[0].url === client.global.get("item_1_url"), "Wrong item url")
+    })
+
+    client.test("Item #1 tags are correct", function() {
+        client.assert(response.body[0].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[0].tags.length === 3, "Wrong number of tags")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_1") + "'")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_2")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_2") + "'")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_3")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_3") + "'")
+    })
+
+    client.test("Item #3 id is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[1].id === client.global.get("item_3_id"), "Wrong item id")
+    })
+
+    client.test("Item #3 url is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[1].url === client.global.get("item_3_url"), "Wrong item url")
+    })
+
+    client.test("Item #3 tags are correct", function() {
+        client.assert(response.body[1].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[1].tags.length === 1, "Wrong number of tags")
+        client.assert(response.body[1].tags.indexOf(client.global.get("item_3_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_3_tag_1") + "'")
+    })
+%}
+
+### Delete item #2
+
+DELETE {{host}}/items/{{item_2_id}}
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+%}
+
+### Get user #1 items after item #2 deleted
+
+GET {{host}}/items
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 2 items in the list", function() {
+        client.assert(response.body.length === 2, "Wrong number of items")
+    })
+
+    client.test("Item #1 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("item_1_id"), "Wrong item id")
+    })
+
+    client.test("Item #1 url is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[0].url === client.global.get("item_1_url"), "Wrong item url")
+    })
+
+    client.test("Item #1 tags are correct", function() {
+        client.assert(response.body[0].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[0].tags.length === 3, "Wrong number of tags")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_1") + "'")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_2")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_2") + "'")
+        client.assert(response.body[0].tags.indexOf(client.global.get("item_1_tag_3")) != -1, "Cannot find tag '" + client.global.get("item_1_tag_3") + "'")
+    })
+
+    client.test("Item #3 id is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[1].id === client.global.get("item_3_id"), "Wrong item id")
+    })
+
+    client.test("Item #3 url is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("url"), "Cannot find 'url' property")
+        client.assert(response.body[1].url === client.global.get("item_3_url"), "Wrong item url")
+    })
+
+    client.test("Item #3 tags are correct", function() {
+        client.assert(response.body[1].hasOwnProperty("tags"), "Cannot find 'tags' property")
+        client.assert(response.body[1].tags.length === 1, "Wrong number of tags")
+        client.assert(response.body[1].tags.indexOf(client.global.get("item_3_tag_1")) != -1, "Cannot find tag '" + client.global.get("item_3_tag_1") + "'")
+    })
+%}
+
+###

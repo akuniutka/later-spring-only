@@ -1,4 +1,4 @@
-package ru.practicum.user;
+package ru.practicum.itemnote;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -8,14 +8,11 @@ import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(of = "id")
-public class UserDto {
+public class ItemNoteDto {
 
     private Long id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String state;
+    private String text;
 
     @JsonFormat(pattern = "yyyy-MM-dd, HH:mm:ss", timezone = "UTC")
-    private Instant registrationDate;
+    private Instant created;
 }

@@ -1,0 +1,159 @@
+### Create user #1
+
+< {%
+    client.global.set("user_1_id", 1);
+    client.global.set("user_1_first_name", $random.alphabetic(10));
+    client.global.set("user_1_last_name", $random.alphabetic(20));
+    client.global.set("user_1_email", $random.email);
+    client.global.set("user_1_request_date", new Date().setUTCMilliseconds(0));
+%}
+
+POST {{host}}/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "{{user_1_first_name}}",
+  "lastName": "{{user_1_last_name}}",
+  "email": "{{user_1_email}}"
+}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("User #1 id is correct", function() {
+        client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body.id === client.global.get("user_1_id"), "Wrong user id")
+    })
+
+    client.test("User #1 first name is correct", function() {
+        client.assert(response.body.hasOwnProperty("firstName"), "Cannot find 'firstName' property")
+        client.assert(response.body.firstName === client.global.get("user_1_first_name"), "Wrong user first name")
+    })
+
+    client.test("User #1 last name is correct", function() {
+        client.assert(response.body.hasOwnProperty("lastName"), "Cannot find 'lastName' property")
+        client.assert(response.body.lastName === client.global.get("user_1_last_name"), "Wrong user last name")
+    })
+
+    client.test("User #1 email is correct", function() {
+        client.assert(response.body.hasOwnProperty("email"), "Cannot find 'email' property")
+        client.assert(response.body.email === client.global.get("user_1_email"), "Wrong user email")
+    })
+
+    client.test("User #1 status is 'ACTIVE'", function() {
+        client.assert(response.body.hasOwnProperty("state"), "Cannot find 'state' property")
+        client.assert(response.body.state === "ACTIVE", "Wrong user status")
+    })
+
+    client.test("User #1 registration date is correct", function() {
+        const currentDate = new Date();
+        client.assert(response.body.hasOwnProperty("registrationDate"), "Cannot find 'registrationDate' property");
+        let registrationDate = Date.parse(response.body.registrationDate.replace(", ", "T") + "Z");
+        client.assert(!isNaN(registrationDate), "Invalid value of 'registrationDate' property");
+        client.assert(registrationDate <= currentDate, "Registration date cannot be in the future");
+        client.assert(registrationDate >= client.global.get("user_1_request_date"), "Registration date cannot be before request");
+        client.global.set("user_1_registration_date", response.body.registrationDate);
+    })
+%}
+
+### Create user #2
+
+< {%
+    client.global.set("user_2_id", 2);
+    client.global.set("user_2_first_name", $random.alphabetic(10));
+    client.global.set("user_2_last_name", $random.alphabetic(20));
+    client.global.set("user_2_email", $random.email);
+%}
+
+POST {{host}}/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "{{user_2_first_name}}",
+  "lastName": "{{user_2_last_name}}",
+  "email": "{{user_2_email}}"
+}
+
+> {%
+    client.global.set("user_2_registration_date", response.body.registrationDate);
+%}
+
+### Get users
+
+GET {{host}}/users
+Accept: application/json
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 2 users in the list", function() {
+        client.assert(response.body.length === 2, "Wrong number of users")
+    })
+
+    client.test("User #1 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("user_1_id"), "Wrong user id")
+    })
+
+    client.test("User #1 first name is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("firstName"), "Cannot find 'firstName' property")
+        client.assert(response.body[0].firstName === client.global.get("user_1_first_name"), "Wrong user first name")
+    })
+
+    client.test("User #1 last name is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("lastName"), "Cannot find 'lastName' property")
+        client.assert(response.body[0].lastName === client.global.get("user_1_last_name"), "Wrong user last name")
+    })
+
+    client.test("User #1 email is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("email"), "Cannot find 'email' property")
+        client.assert(response.body[0].email === client.global.get("user_1_email"), "Wrong user email")
+    })
+
+    client.test("User #1 status is 'ACTIVE'", function() {
+        client.assert(response.body[0].hasOwnProperty("state"), "Cannot find 'state' property")
+        client.assert(response.body[0].state === "ACTIVE", "Wrong user status")
+    })
+
+    client.test("User #1 registration date is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("registrationDate"), "Cannot find 'registrationDate' property");
+        client.assert(response.body[0].registrationDate === client.global.get("user_1_registration_date"), "Wrong user registration date");
+    })
+
+    client.test("User #2 id is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[1].id === client.global.get("user_2_id"), "Wrong user id")
+    })
+
+    client.test("User #2 first name is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("firstName"), "Cannot find 'firstName' property")
+        client.assert(response.body[1].firstName === client.global.get("user_2_first_name"), "Wrong user first name")
+    })
+
+    client.test("User #2 last name is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("lastName"), "Cannot find 'lastName' property")
+        client.assert(response.body[1].lastName === client.global.get("user_2_last_name"), "Wrong user last name")
+    })
+
+    client.test("User #2 email is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("email"), "Cannot find 'email' property")
+        client.assert(response.body[1].email === client.global.get("user_2_email"), "Wrong user email")
+    })
+
+    client.test("User #2 status is 'ACTIVE'", function() {
+        client.assert(response.body[1].hasOwnProperty("state"), "Cannot find 'state' property")
+        client.assert(response.body[1].state === "ACTIVE", "Wrong user status")
+    })
+
+    client.test("User #2 registration date is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("registrationDate"), "Cannot find 'registrationDate' property");
+        client.assert(response.body[1].registrationDate === client.global.get("user_2_registration_date"), "Wrong user registration date");
+    })
+%}
+###

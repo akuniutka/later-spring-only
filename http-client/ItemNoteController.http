@@ -1,0 +1,313 @@
+### Create user #1
+
+< {%
+    client.global.set("user_1_id", 1);
+    client.global.set("user_1_first_name", $random.alphabetic(10));
+    client.global.set("user_1_last_name", $random.alphabetic(20));
+    client.global.set("user_1_email", $random.email);
+%}
+
+POST {{host}}/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "{{user_1_first_name}}",
+  "lastName": "{{user_1_last_name}}",
+  "email": "{{user_1_email}}"
+}
+
+> {%
+    client.global.set("user_1_registration_date", response.body.registrationDate);
+%}
+
+### Create user #2
+
+< {%
+    client.global.set("user_2_id", 2);
+    client.global.set("user_2_first_name", $random.alphabetic(10));
+    client.global.set("user_2_last_name", $random.alphabetic(20));
+    client.global.set("user_2_email", $random.email);
+%}
+
+POST {{host}}/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "firstName": "{{user_2_first_name}}",
+  "lastName": "{{user_2_last_name}}",
+  "email": "{{user_2_email}}"
+}
+
+> {%
+    client.global.set("user_2_registration_date", response.body.registrationDate);
+%}
+
+### Create item #1
+
+< {%
+    client.global.set("item_1_id", 1);
+    client.global.set("item_1_user_id", client.global.get("user_1_id"));
+    client.global.set("item_1_url", $random.alphabetic(40));
+    client.global.set("item_1_tag_1", $random.alphabetic(10));
+    client.global.set("item_1_tag_2", $random.alphabetic(10));
+    client.global.set("item_1_tag_3", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_1_user_id}}
+
+{
+  "url": "{{item_1_url}}",
+  "tags": ["{{item_1_tag_1}}", "{{item_1_tag_2}}", "{{item_1_tag_3}}"]
+}
+
+### Create item #2
+
+< {%
+    client.global.set("item_2_id", 2);
+    client.global.set("item_2_user_id", client.global.get("user_1_id"));
+    client.global.set("item_2_url", $random.alphabetic(40));
+    client.global.set("item_2_tag_1", $random.alphabetic(10));
+    client.global.set("item_2_tag_2", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_2_user_id}}
+
+{
+  "url": "{{item_2_url}}",
+  "tags": ["{{item_2_tag_1}}", "{{item_2_tag_2}}"]
+}
+
+### Create item #3
+
+< {%
+    client.global.set("item_3_id", 3);
+    client.global.set("item_3_user_id", client.global.get("user_1_id"));
+    client.global.set("item_3_url", $random.alphabetic(40));
+    client.global.set("item_3_tag_1", $random.alphabetic(10));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_3_user_id}}
+
+{
+  "url": "{{item_3_url}}",
+  "tags": ["{{item_3_tag_1}}"]
+}
+
+### Create item #4
+
+< {%
+    client.global.set("item_4_id", 3);
+    client.global.set("item_4_user_id", client.global.get("user_2_id"));
+    client.global.set("item_4_url", client.global.get("item_1_url"));
+    client.global.set("item_4_tag_1", client.global.get("item_2_tag_1"));
+%}
+
+POST {{host}}/items
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{item_4_user_id}}
+
+{
+  "url": "{{item_4_url}}",
+  "tags": ["{{item_4_tag_1}}"]
+}
+
+### Create note #1
+
+< {%
+    client.global.set("note_1_id", 1);
+    client.global.set("note_1_user_id", client.global.get("user_1_id"));
+    client.global.set("note_1_item_id", client.global.get("item_1_id"));
+    client.global.set("note_1_text", $random.alphabetic(200));
+    client.global.set("note_1_request_date", new Date().setUTCMilliseconds(0));
+%}
+
+POST {{host}}/notes
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{note_1_user_id}}
+
+{
+  "item": {
+    "id": {{note_1_item_id}}
+  },
+  "text": "{{note_1_text}}"
+}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("Note #1 id is correct", function() {
+        client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body.id === client.global.get("note_1_id"), "Wrong note id")
+    })
+
+    client.test("Note #1 text is correct", function() {
+        client.assert(response.body.hasOwnProperty("text"), "Cannot find 'text' property")
+        client.assert(response.body.text === client.global.get("note_1_text"), "Wrong note text")
+    })
+
+    client.test("Note #1 creation date is correct", function() {
+        const currentDate = new Date();
+        client.assert(response.body.hasOwnProperty("created"), "Cannot find 'created' property");
+        let created = Date.parse(response.body.created.replace(", ", "T") + "Z");
+        client.assert(!isNaN(created), "Invalid value of 'created' property");
+        client.assert(created <= currentDate, "Creation date cannot be in the future");
+        client.assert(created >= client.global.get("note_1_request_date"), "Creation date cannot be before request");
+        client.global.set("note_1_created", response.body.created);
+    })
+%}
+
+### Create note #2
+< {%
+    client.global.set("note_2_id", 2);
+    client.global.set("note_2_user_id", client.global.get("user_1_id"));
+    client.global.set("note_2_item_id", client.global.get("item_2_id"));
+    client.global.set("note_2_text", $random.alphabetic(200));
+%}
+
+POST {{host}}/notes
+Content-Type: application/json
+Accept: application/json
+X-Later-User-Id: {{note_2_user_id}}
+
+{
+  "item": {
+    "id": {{note_2_item_id}}
+  },
+  "text": "{{note_2_text}}"
+}
+
+> {%
+    client.global.set("note_2_created", response.body.created);
+%}
+
+### Get user #1 notes
+
+GET {{host}}/notes
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 2 notes in the list", function() {
+        client.assert(response.body.length === 2, "Wrong number of notes")
+    })
+
+    client.test("Note #1 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("note_1_id"), "Wrong note id")
+    })
+
+    client.test("Note #1 text is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
+        client.assert(response.body[0].text === client.global.get("note_1_text"), "Wrong note text")
+    })
+
+    client.test("Note #1 creation date is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("created"), "Cannot find 'created' property");
+        client.assert(response.body[0].created === client.global.get("note_1_created"), "Wrong note creation date");
+    })
+
+
+    client.test("Note #2 id is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[1].id === client.global.get("note_2_id"), "Wrong note id")
+    })
+
+    client.test("Note #2 text is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("text"), "Cannot find 'text' property")
+        client.assert(response.body[1].text === client.global.get("note_2_text"), "Wrong note text")
+    })
+
+    client.test("Note #2 creation date is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("created"), "Cannot find 'created' property");
+        client.assert(response.body[1].created === client.global.get("note_2_created"), "Wrong note creation date");
+    })
+%}
+
+### Get user #1 notes by item url pattern
+
+< {%
+    let urlPattern = client.global.get("item_1_url");
+    urlPattern = urlPattern.substring(1, urlPattern.length - 2);
+    client.global.set("urlPattern", urlPattern);
+%}
+
+GET {{host}}/notes?urlPattern={{urlPattern}}
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 1 note in the list", function() {
+        client.assert(response.body.length === 1, "Wrong number of notes")
+    })
+
+    client.test("Note #1 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("note_1_id"), "Wrong note id")
+    })
+
+    client.test("Note #1 text is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
+        client.assert(response.body[0].text === client.global.get("note_1_text"), "Wrong note text")
+    })
+
+    client.test("Note #1 creation date is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("created"), "Cannot find 'created' property");
+        client.assert(response.body[0].created === client.global.get("note_1_created"), "Wrong note creation date");
+    })
+%}
+
+### Get user #1 notes by item tag
+
+GET {{host}}/notes?tag={{item_2_tag_1}}
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 1 note in the list", function() {
+        client.assert(response.body.length === 1, "Wrong number of notes")
+    })
+
+    client.test("Note #2 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("note_2_id"), "Wrong note id")
+    })
+
+    client.test("Note #2 text is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
+        client.assert(response.body[0].text === client.global.get("note_2_text"), "Wrong note text")
+    })
+
+    client.test("Note #2 creation date is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("created"), "Cannot find 'created' property");
+        client.assert(response.body[0].created === client.global.get("note_2_created"), "Wrong note creation date");
+    })
+%}
+
+###
