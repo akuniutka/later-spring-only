@@ -1,4 +1,4 @@
-package ru.practicum.itemnote;
+package ru.practicum.note;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -11,8 +11,11 @@ import java.time.Instant;
 public class ItemNoteDto {
 
     private Long id;
+    private Long itemId;
     private String text;
 
     @JsonFormat(pattern = "yyyy-MM-dd, HH:mm:ss", timezone = "UTC")
-    private Instant created;
+    private Instant dateOfNote;
+
+    private String itemUrl;
 }

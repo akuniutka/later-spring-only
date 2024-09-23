@@ -1,7 +1,9 @@
-package ru.practicum.itemnote;
+package ru.practicum.note;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.item.Item;
@@ -32,16 +34,21 @@ public class ItemNoteServiceImpl implements ItemNoteService {
     }
 
     @Override
-    public List<ItemNote> getItemNotes(final long userId, final String urlPattern, final String tag) {
+    public List<ItemNote> searchNotesByUrl(final long userId, final String urlPattern) {
         userService.getUser(userId);
-        if (urlPattern != null && tag != null) {
-            throw new RuntimeException();
-        } else if (urlPattern != null) {
-            return repository.findAllByItemUserIdAndItemUrlContains(userId, urlPattern);
-        } else if (tag != null) {
-            return repository.findAllByItemUserIdAndItemTag(userId, tag);
-        } else {
-            return repository.findAllByItemUserId(userId);
-        }
+        return repository.findAllByItemUserIdAndItemUrlContains(userId, urlPattern);
+    }
+
+    @Override
+    public List<ItemNote> searchNotesByTag(final long userId, final String tag) {
+        userService.getUser(userId);
+        return repository.findAllByItemUserIdAndItemTag(userId, tag);
+    }
+
+    @Override
+    public List<ItemNote> getItemNotes(final long userId, final int page, final int size) {
+        userService.getUser(userId);
+        Pageable pageRequest = PageRequest.of(Math.max(page, 1) - 1, size);
+        return repository.findAllByItemUserId(userId, pageRequest);
     }
 }

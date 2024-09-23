@@ -1,7 +1,6 @@
 ### Create user #1
 
 < {%
-    client.global.set("user_1_id", 1);
     client.global.set("user_1_first_name", $random.alphabetic(10));
     client.global.set("user_1_last_name", $random.alphabetic(20));
     client.global.set("user_1_email", $random.email);
@@ -18,13 +17,21 @@ Accept: application/json
 }
 
 > {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
+    client.assert(!isNaN(response.body.id), "Wrong format of id")
+    client.global.set("user_1_id", response.body.id);
+
+    client.assert(response.body.hasOwnProperty("registrationDate"), "Cannot find 'id' property")
     client.global.set("user_1_registration_date", response.body.registrationDate);
 %}
 
 ### Create user #2
 
 < {%
-    client.global.set("user_2_id", 2);
     client.global.set("user_2_first_name", $random.alphabetic(10));
     client.global.set("user_2_last_name", $random.alphabetic(20));
     client.global.set("user_2_email", $random.email);
@@ -41,6 +48,16 @@ Accept: application/json
 }
 
 > {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
+    client.assert(!isNaN(response.body.id), "Wrong format of id")
+    client.assert(response.body.id != client.global.get("user_1_id"))
+    client.global.set("user_2_id", response.body.id);
+
+    client.assert(response.body.hasOwnProperty("registrationDate"), "Cannot find 'id' property")
     client.global.set("user_2_registration_date", response.body.registrationDate);
 %}
 
@@ -139,9 +156,7 @@ Accept: application/json
 X-Later-User-Id: {{note_1_user_id}}
 
 {
-  "item": {
-    "id": {{note_1_item_id}}
-  },
+  "itemId": {{note_1_item_id}},
   "text": "{{note_1_text}}"
 }
 
@@ -155,19 +170,29 @@ X-Later-User-Id: {{note_1_user_id}}
         client.assert(response.body.id === client.global.get("note_1_id"), "Wrong note id")
     })
 
+    client.test("Note #1 item id is correct", function () {
+        client.assert(response.body.hasOwnProperty("itemId"), "Cannot find 'ItemId' property")
+        client.assert(response.body.itemId === client.global.get("note_1_item_id"), "Wrong item id")
+    })
+
     client.test("Note #1 text is correct", function() {
         client.assert(response.body.hasOwnProperty("text"), "Cannot find 'text' property")
         client.assert(response.body.text === client.global.get("note_1_text"), "Wrong note text")
     })
 
-    client.test("Note #1 creation date is correct", function() {
+    client.test("Note #1 item url is correct", function () {
+        client.assert(response.body.hasOwnProperty("itemUrl"), "Cannot find 'itemUrl' property")
+        client.assert(response.body.itemUrl === client.global.get("item_1_url"), "Wrong item url")
+    })
+
+    client.test("Note #1 date of note is correct", function() {
         const currentDate = new Date();
-        client.assert(response.body.hasOwnProperty("created"), "Cannot find 'created' property");
-        let created = Date.parse(response.body.created.replace(", ", "T") + "Z");
-        client.assert(!isNaN(created), "Invalid value of 'created' property");
-        client.assert(created <= currentDate, "Creation date cannot be in the future");
-        client.assert(created >= client.global.get("note_1_request_date"), "Creation date cannot be before request");
-        client.global.set("note_1_created", response.body.created);
+        client.assert(response.body.hasOwnProperty("dateOfNote"), "Cannot find 'dateOfNote' property");
+        let dateOfNote = Date.parse(response.body.dateOfNote.replace(", ", "T") + "Z");
+        client.assert(!isNaN(dateOfNote), "Invalid value of 'dateOfNote' property");
+        client.assert(dateOfNote <= currentDate, "Date of note cannot be in the future");
+        client.assert(dateOfNote >= client.global.get("note_1_request_date"), "Date of note cannot be before request");
+        client.global.set("note_1_date_of_note", response.body.dateOfNote);
     })
 %}
 
@@ -185,14 +210,12 @@ Accept: application/json
 X-Later-User-Id: {{note_2_user_id}}
 
 {
-  "item": {
-    "id": {{note_2_item_id}}
-  },
+  "itemId": {{note_2_item_id}},
   "text": "{{note_2_text}}"
 }
 
 > {%
-    client.global.set("note_2_created", response.body.created);
+    client.global.set("note_2_date_of_note", response.body.dateOfNote);
 %}
 
 ### Get user #1 notes
@@ -215,20 +238,34 @@ X-Later-User-Id: {{user_1_id}}
         client.assert(response.body[0].id === client.global.get("note_1_id"), "Wrong note id")
     })
 
+    client.test("Note #1 item id is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemId"), "Cannot find 'ItemId' property")
+        client.assert(response.body[0].itemId === client.global.get("note_1_item_id"), "Wrong item id")
+    })
+
     client.test("Note #1 text is correct", function() {
         client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
         client.assert(response.body[0].text === client.global.get("note_1_text"), "Wrong note text")
     })
 
-    client.test("Note #1 creation date is correct", function() {
-        client.assert(response.body[0].hasOwnProperty("created"), "Cannot find 'created' property");
-        client.assert(response.body[0].created === client.global.get("note_1_created"), "Wrong note creation date");
+    client.test("Note #1 item url is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemUrl"), "Cannot find 'itemUrl' property")
+        client.assert(response.body[0].itemUrl === client.global.get("item_1_url"), "Wrong item url")
     })
 
+    client.test("Note #1 date of note is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("dateOfNote"), "Cannot find 'dateOfNote' property");
+        client.assert(response.body[0].dateOfNote === client.global.get("note_1_date_of_note"), "Wrong date of note");
+    })
 
     client.test("Note #2 id is correct", function() {
         client.assert(response.body[1].hasOwnProperty("id"), "Cannot find 'id' property")
         client.assert(response.body[1].id === client.global.get("note_2_id"), "Wrong note id")
+    })
+
+    client.test("Note #2 item id is correct", function () {
+        client.assert(response.body[1].hasOwnProperty("itemId"), "Cannot find 'ItemId' property")
+        client.assert(response.body[1].itemId === client.global.get("note_2_item_id"), "Wrong item id")
     })
 
     client.test("Note #2 text is correct", function() {
@@ -236,9 +273,14 @@ X-Later-User-Id: {{user_1_id}}
         client.assert(response.body[1].text === client.global.get("note_2_text"), "Wrong note text")
     })
 
-    client.test("Note #2 creation date is correct", function() {
-        client.assert(response.body[1].hasOwnProperty("created"), "Cannot find 'created' property");
-        client.assert(response.body[1].created === client.global.get("note_2_created"), "Wrong note creation date");
+    client.test("Note #2 item url is correct", function () {
+        client.assert(response.body[1].hasOwnProperty("itemUrl"), "Cannot find 'itemUrl' property")
+        client.assert(response.body[1].itemUrl === client.global.get("item_2_url"), "Wrong item url")
+    })
+
+    client.test("Note #2 date of note is correct", function() {
+        client.assert(response.body[1].hasOwnProperty("dateOfNote"), "Cannot find 'dateOfNote' property");
+        client.assert(response.body[1].dateOfNote === client.global.get("note_2_date_of_note"), "Wrong date of note");
     })
 %}
 
@@ -250,7 +292,7 @@ X-Later-User-Id: {{user_1_id}}
     client.global.set("urlPattern", urlPattern);
 %}
 
-GET {{host}}/notes?urlPattern={{urlPattern}}
+GET {{host}}/notes?url={{urlPattern}}
 Accept: application/json
 X-Later-User-Id: {{user_1_id}}
 
@@ -268,14 +310,24 @@ X-Later-User-Id: {{user_1_id}}
         client.assert(response.body[0].id === client.global.get("note_1_id"), "Wrong note id")
     })
 
+    client.test("Note #1 item id is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemId"), "Cannot find 'ItemId' property")
+        client.assert(response.body[0].itemId === client.global.get("note_1_item_id"), "Wrong item id")
+    })
+
     client.test("Note #1 text is correct", function() {
         client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
         client.assert(response.body[0].text === client.global.get("note_1_text"), "Wrong note text")
     })
 
-    client.test("Note #1 creation date is correct", function() {
-        client.assert(response.body[0].hasOwnProperty("created"), "Cannot find 'created' property");
-        client.assert(response.body[0].created === client.global.get("note_1_created"), "Wrong note creation date");
+    client.test("Note #1 item url is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemUrl"), "Cannot find 'itemUrl' property")
+        client.assert(response.body[0].itemUrl === client.global.get("item_1_url"), "Wrong item url")
+    })
+
+    client.test("Note #1 date of note is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("dateOfNote"), "Cannot find 'dateOfNote' property");
+        client.assert(response.body[0].dateOfNote === client.global.get("note_1_date_of_note"), "Wrong date of note");
     })
 %}
 
@@ -299,14 +351,65 @@ X-Later-User-Id: {{user_1_id}}
         client.assert(response.body[0].id === client.global.get("note_2_id"), "Wrong note id")
     })
 
+    client.test("Note #2 item id is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemId"), "Cannot find 'ItemId' property")
+        client.assert(response.body[0].itemId === client.global.get("note_2_item_id"), "Wrong item id")
+    })
+
     client.test("Note #2 text is correct", function() {
         client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
         client.assert(response.body[0].text === client.global.get("note_2_text"), "Wrong note text")
     })
 
-    client.test("Note #2 creation date is correct", function() {
-        client.assert(response.body[0].hasOwnProperty("created"), "Cannot find 'created' property");
-        client.assert(response.body[0].created === client.global.get("note_2_created"), "Wrong note creation date");
+    client.test("Note #2 item url is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemUrl"), "Cannot find 'itemUrl' property")
+        client.assert(response.body[0].itemUrl === client.global.get("item_2_url"), "Wrong item url")
+    })
+
+    client.test("Note #2 date of note is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("dateOfNote"), "Cannot find 'dateOfNote' property");
+        client.assert(response.body[0].dateOfNote === client.global.get("note_2_date_of_note"), "Wrong date of note");
+    })
+%}
+
+### Get user #1 notes from page 2 by 1 per page
+
+GET {{host}}/notes?page=2&size=1
+Accept: application/json
+X-Later-User-Id: {{user_1_id}}
+
+> {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.test("There are 1 note in the list", function() {
+        client.assert(response.body.length === 1, "Wrong number of notes")
+    })
+
+    client.test("Note #2 id is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("id"), "Cannot find 'id' property")
+        client.assert(response.body[0].id === client.global.get("note_2_id"), "Wrong note id")
+    })
+
+    client.test("Note #2 item id is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemId"), "Cannot find 'ItemId' property")
+        client.assert(response.body[0].itemId === client.global.get("note_2_item_id"), "Wrong item id")
+    })
+
+    client.test("Note #2 text is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("text"), "Cannot find 'text' property")
+        client.assert(response.body[0].text === client.global.get("note_2_text"), "Wrong note text")
+    })
+
+    client.test("Note #2 item url is correct", function () {
+        client.assert(response.body[0].hasOwnProperty("itemUrl"), "Cannot find 'itemUrl' property")
+        client.assert(response.body[0].itemUrl === client.global.get("item_2_url"), "Wrong item url")
+    })
+
+    client.test("Note #2 date of note is correct", function() {
+        client.assert(response.body[0].hasOwnProperty("dateOfNote"), "Cannot find 'dateOfNote' property");
+        client.assert(response.body[0].dateOfNote === client.global.get("note_2_date_of_note"), "Wrong date of note");
     })
 %}
 

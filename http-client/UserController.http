@@ -1,7 +1,6 @@
 ### Create user #1
 
 < {%
-    client.global.set("user_1_id", 1);
     client.global.set("user_1_first_name", $random.alphabetic(10));
     client.global.set("user_1_last_name", $random.alphabetic(20));
     client.global.set("user_1_email", $random.email);
@@ -25,7 +24,8 @@ Accept: application/json
 
     client.test("User #1 id is correct", function() {
         client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
-        client.assert(response.body.id === client.global.get("user_1_id"), "Wrong user id")
+        client.assert(!isNaN(response.body.id), "Wrong format of id")
+        client.global.set("user_1_id", response.body.id);
     })
 
     client.test("User #1 first name is correct", function() {
@@ -62,7 +62,6 @@ Accept: application/json
 ### Create user #2
 
 < {%
-    client.global.set("user_2_id", 2);
     client.global.set("user_2_first_name", $random.alphabetic(10));
     client.global.set("user_2_last_name", $random.alphabetic(20));
     client.global.set("user_2_email", $random.email);
@@ -79,6 +78,16 @@ Accept: application/json
 }
 
 > {%
+    import './validate-200-response'
+
+    import './validate-content-type'
+
+    client.assert(response.body.hasOwnProperty("id"), "Cannot find 'id' property")
+    client.assert(!isNaN(response.body.id), "Wrong format of id")
+    client.assert(response.body.id != client.global.get("user_1_id"))
+    client.global.set("user_2_id", response.body.id);
+
+    client.assert(response.body.hasOwnProperty("registrationDate"), "Cannot find 'id' property")
     client.global.set("user_2_registration_date", response.body.registrationDate);
 %}
 

@@ -1,5 +1,6 @@
-package ru.practicum.itemnote;
+package ru.practicum.note;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public interface ItemNoteRepository extends JpaRepository<ItemNote, Long> {
 
-    List<ItemNote> findAllByItemUserId(long userId);
+    List<ItemNote> findAllByItemUserId(long userId, Pageable page);
 
     List<ItemNote> findAllByItemUserIdAndItemUrlContains(long userId, String urlPattern);
 

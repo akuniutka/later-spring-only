@@ -54,6 +54,6 @@ services:
             id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
             item_id BIGINT NOT NULL REFERENCES items (id),
             text VARCHAR(2000),
-            created TIMESTAMP WITH TIME ZONE NOT NULL
+            date_of_note TIMESTAMP WITH TIME ZONE NOT NULL
           );
         EOSQL
