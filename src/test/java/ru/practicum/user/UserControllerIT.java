@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import ru.practicum.common.ControllerExceptionHandler;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -42,6 +43,7 @@ class UserControllerIT {
     void setUp() {
         mvc = MockMvcBuilders
                 .standaloneSetup(controller)
+                .setControllerAdvice(ControllerExceptionHandler.class)
                 .build();
         reset(userService, userMapper);
     }
@@ -87,6 +89,17 @@ class UserControllerIT {
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(""))
+                .andDo(print())
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void testSaveNewUserWhenNoEmail() throws Exception {
+        mvc.perform(post("/users")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\":\"John\",\"lastName\":\"Doe\"}"))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }

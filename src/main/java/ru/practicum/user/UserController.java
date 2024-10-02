@@ -1,14 +1,17 @@
 package ru.practicum.user;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.common.BaseController;
+import ru.practicum.common.exception.ValidationException;
 
 import java.util.List;
 
@@ -33,9 +36,13 @@ public class UserController extends BaseController {
 
     @PostMapping
     public UserDto saveNewUser(
-            @RequestBody final NewUserDto newUserDto,
+            @Valid @RequestBody final NewUserDto newUserDto,
+            BindingResult bindingResult,
             final HttpServletRequest request
     ) {
+        if (bindingResult.hasErrors()) {
+            throw new ValidationException(bindingResult);
+        }
         logRequest(request, newUserDto);
         final User user = mapper.mapToUser(newUserDto);
         final UserDto dto = mapper.mapToDto(userService.saveUser(user));
