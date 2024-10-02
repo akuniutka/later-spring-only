@@ -1,3 +1,4 @@
+http-client/*.sh
 target/
 volumes/
 !.mvn/wrapper/maven-wrapper.jar
