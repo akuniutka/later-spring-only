@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import ru.practicum.common.ControllerExceptionHandler;
+import ru.practicum.config.WebConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -27,23 +27,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@SpringJUnitWebConfig({UserController.class, ControllerExceptionHandler.class, TestConfig.class, WebConfig.class})
 class UserControllerIT {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    @Mock
-    private UserService userService;
-    @Mock
-    private UserMapper userMapper;
-    @InjectMocks
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final ObjectMapper objectMapper;
+
     private UserController controller;
     private MockMvc mvc;
 
+    @Autowired
+    UserControllerIT(final UserService userService, final UserMapper userMapper) {
+        this.userService = userService;
+        this.userMapper = userMapper;
+        this.objectMapper = new ObjectMapper();
+    }
+
     @BeforeEach
-    void setUp() {
+    void setUp(WebApplicationContext context) {
         mvc = MockMvcBuilders
-                .standaloneSetup(controller)
-                .setControllerAdvice(ControllerExceptionHandler.class)
+                .webAppContextSetup(context)
                 .build();
         reset(userService, userMapper);
     }
@@ -131,6 +135,7 @@ class UserControllerIT {
                 .andExpect(content().json(expectedJson));
 
         verify(userService).getAllUsers();
+        verify(userMapper).mapToDto(List.of(john, adrian, luke));
     }
 
     private NewUserDto makeNewUserDto(final String firstName, final String lastName, final String email) {
